@@ -29,13 +29,13 @@ class trainLine:
         self.sectionIdxs=[]
         self.getXYs()
     def getXYs(self):
-        #先解析车站数据
+       
         for t,objIdx,trackIdx,_,_ in self.train.trRecord:
             if isinstance(objIdx,int):
                 self.stationIOTime.append(t)
                 self.stationIdxs.append(objIdx)
                 self.stationTrackIdxs.append(trackIdx)
-        #区间和车站时间相同，区间时间-1
+       
         for t,objIdx,trackIdx,_,_ in self.train.trRecord:
             if isinstance(objIdx,str):
                 write_t=None
@@ -143,7 +143,7 @@ class SchedulePloter:
         for fig in self.figs:
             fig.show()
     def merge_paths(self,G, paths):
-        # 合并路径
+
         merged_paths = []
         for path in paths:
       

@@ -224,7 +224,7 @@ class Section:
         tauLeft=min(tauLeft,thTimeValue)
         trainPriority=0
         trainVelocity=0
-        trainStatu=0#添加列车状态
+        trainStatu=0
         remainedTimeToPass=0
         reverse=None
         maxRemainderTime=None
@@ -682,7 +682,6 @@ class SimulatorBasedLinesAndTrains:
         """
       
         """
-        #不在运行中收到了运行动作
         if railTrain.statu==RailTrainStatu.WaitStart:
             if sa==SchedulingAction.MaintainTheStatu:
                 return ResponseToTheSchedulingAction.ValidActionWithSuccessExecuting
@@ -964,7 +963,6 @@ class SimulatorBasedLinesAndTrains:
     
     def IsDoneAndSimStatu(self):
         """
-        是否仿真结束isdone,是否运行成功isSuccess,是否超时
         return isdone,issuccess,isOutofTime
         """
         assert self.statu==SimulatorStatu.InOperation or self.statu==SimulatorStatu.CompletedWithFailure or self.statu==SimulatorStatu.CompletedWithSuccess,f'Simulator is in a  unavaliable statu'

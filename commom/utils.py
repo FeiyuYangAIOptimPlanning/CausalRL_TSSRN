@@ -36,12 +36,7 @@ from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
-#3,entF=0.5
-#5,entF=2
-#6,entF=1000
-#7,entF=1
-#8,0.01
-#9,0.05
+
 writer = SummaryWriter('runs\\MkedEntPcy_trainActSamp_EntF8en2_criticStzsDetached9')
 globalEpisode=[0]
 
@@ -55,19 +50,13 @@ def identity(x):
     return x
 
 
-# def entropy(p):
-#     return -th.sum(p * th.log(p+1e-5), -1)
-
 def masked_entropy(action_log_probs, mask):
     p=th.exp(action_log_probs)
-    # 确保 mask 中不止一个位置为 1 的行参与计算
     valid_rows = (mask.sum(dim=-1) > 1)
 
 
-    # 计算熵，避免 log(0)
     entropy = -th.sum(p * th.log(p + 1e-5), dim=-1)
 
-    # 归一化熵
     entropy = th.sum(entropy)/valid_rows.sum().item()
 
     return entropy
@@ -129,8 +118,6 @@ def binary_to_one_hot(binary_tensor, action_dim,use_gpu=True):
     # Ensure the action dimension is valid
     assert action_dim <= 16, "actionDim must be less than or equal to 16"
 
-    # Calculate the decimal values from the binary tensor
-    # Example: [0, 0, 1, 1] --> 3
     device='cuda'
     if not use_gpu:
         device='cpu'
@@ -196,58 +183,24 @@ def npABCDToTensorList(ABCD_batch,use_cuda=True):
     D_batch=th.stack(D_batch,dim=0).squeeze(1).squeeze(1)
     E_batch=[th.stack(ts,dim=0).squeeze(1).squeeze(1) for ts in E_batch]
     return (A_batch,B_batch,C_batch,D_batch,E_batch) # ( list18->[batchsize,featuredim],[batchsize,18,4],list18->[batchsize,featuredim],[batchsize,18,1] )
-    
-# def vae_loss_function(recon_x, x, mu, log_var, pi):
-#     ##全小误差 MSE 34、MAE 48 #中等误差 MSE 21、MAE34 #有大误差MSE 14 MAE 22
-#     lossMSE = F.mse_loss(recon_x, x, reduction='mean')#mse对小幅度的回归loss不敏感8e-5 0.0001 0.0001 0.0052
-#     lossMAE = F.l1_loss(recon_x, x, reduction='mean') #0.0007 0.0007 0.0069 #没效果
-#     beta=0.0005
-#     beta2=0.1
-    
-#     # 对于三个分量的混合高斯，先验均值分别为 0.0 、 0.5 和 1.0
-#     mu_prior = th.zeros_like(mu).to(mu.device)
-#     mu_prior[:,0,:]=th.ones_like(mu[:,0,:],device=mu.device)*0.0
-#     mu_prior[:,1,:]=th.ones_like(mu[:,1,:],device=mu.device)*0.5
-#     mu_prior[:,2,:]=th.ones_like(mu[:,2,:],device=mu.device)*1.0
-    
-#     # 计算每个分量的KLD
-#     kld1= 1 + log_var[:, 0, :] - mu[:, 0, :].pow(2) - log_var[:, 0, :].exp()
-#     lossKLD_1 = -0.5 * th.mean(kld1,dim=(0,1))
 
-#     kld2= 1 + log_var[:, 1, :] - (mu[:, 1, :] - mu_prior[:, 1, :]).pow(2) - log_var[:, 1, :].exp()
-#     lossKLD_2 = -0.5 * th.mean(kld2,dim=(0,1))
 
-#     kld3= 1 + log_var[:, 2, :] - (mu[:, 2, :] - mu_prior[:, 2, :]).pow(2) - log_var[:, 2, :].exp()
-#     lossKLD_3 = -0.5 * th.mean(kld3,dim=(0,1))
-    
-#     # 加权求和
-#     lossKLD = pi[:, 0] * lossKLD_1 + pi[:, 1] * lossKLD_2 + pi[:,2]*lossKLD_3
-
-#     rtn=(1-beta2)*lossMSE + beta2*lossMAE + beta*(lossKLD.mean())#init:0.0147+0.0817+0.0019
-#     assert not th.isinf(rtn).any(),'?'
-#     assert not th.isnan(rtn).any(),'?'
-#     return rtn
-
-#先验方差为sigma_prior
+#sigma_prior
 def vae_loss_function(recon_x, x, mu, log_var, pi):
-    # 计算重构误差
     lossMSE = F.mse_loss(recon_x, x, reduction='mean')
     lossMAE = F.l1_loss(recon_x, x, reduction='mean')
 
-    sigma_prior=th.ones_like(mu)*0.5#先验的标准差0.5，方差0.25
+    sigma_prior=th.ones_like(mu)*0.5
     beta = 0.005
     beta2 = 0.1
     
-    # 对于三个分量的混合高斯，先验均值分别为 0.0、0.5 和 1.0
     mu_prior = th.zeros_like(mu).to(mu.device)
     mu_prior[:, 0, :] = th.ones_like(mu[:, 0, :], device=mu.device) * 0.0
     mu_prior[:, 1, :] = th.ones_like(mu[:, 1, :], device=mu.device) * 0.5
     mu_prior[:, 2, :] = th.ones_like(mu[:, 2, :], device=mu.device) * 1.0
     
-    # sigma_prior 参数化为输入参数
     sigma_prior = sigma_prior.to(mu.device)
     
-    # 计算每个分量的KLD
     kld1 = th.log(sigma_prior[:, 0, :] / th.exp(0.5 * log_var[:, 0, :])) + \
            (th.exp(log_var[:, 0, :]) + (mu[:, 0, :] - mu_prior[:, 0, :]) ** 2) / (2 * sigma_prior[:, 0, :] ** 2) - 0.5
     lossKLD_1 = th.mean(kld1, dim=(0, 1))
@@ -260,10 +213,8 @@ def vae_loss_function(recon_x, x, mu, log_var, pi):
            (th.exp(log_var[:, 2, :]) + (mu[:, 2, :] - mu_prior[:, 2, :]) ** 2) / (2 * sigma_prior[:, 2, :] ** 2) - 0.5
     lossKLD_3 = th.mean(kld3, dim=(0, 1))
     
-    # 加权求和
     lossKLD = pi[:, 0].unsqueeze(-1) * lossKLD_1 + pi[:, 1].unsqueeze(-1) * lossKLD_2 + pi[:, 2].unsqueeze(-1) * lossKLD_3
     
-    # 计算总损失
     rtn = (1 - beta2) * lossMSE + beta2 * lossMAE + beta * lossKLD.mean()
     
     assert not th.isinf(rtn).any(), '?'
@@ -274,10 +225,8 @@ def vae_loss_function(recon_x, x, mu, log_var, pi):
 
 
 def agg_double_list(l):
-    # l: [ [...], [...], [...] ]
-    # l_i: result of each step in the i-th episode
     s = [np.sum(np.array(l_i), 0) for l_i in l]
-    s_mu = np.mean(np.array(s), 0)#np.array(s)->[10,18,1]
+    s_mu = np.mean(np.array(s), 0)
     s_std = np.std(np.array(s), 0)
     return s_mu, s_std
 

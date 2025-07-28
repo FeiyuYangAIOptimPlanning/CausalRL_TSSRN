@@ -101,62 +101,6 @@ class Agent(object):
     def interact(self):
         pass
 
-    # # take one step
-    # def _take_one_step(self):
-    #     if (self.max_steps is not None) and (self.n_steps >= self.max_steps):
-    #         self.env_state = self.env.reset()
-    #         self.n_steps = 0
-    #     state = self.env_state
-    #     action,_,_,_,_ = self.exploration_action(self.env_state)
-    #     next_state, reward, done, _,_ = self.env.step(action)
-    #     if done:
-    #         if self.done_penalty is not None:
-    #             reward = reward            #Edited 不需要专门的奖励？
-    #         #next_state = [0] * len(state) #Edited 不需要专门的状态重置？
-    #         self.env_state = self.env.reset()
-    #         self.n_episodes += 1
-    #         self.episode_done = True
-    #     else:
-    #         self.env_state = next_state
-    #         self.episode_done = False
-    #     self.n_steps += 1
-    #     self.memory.push(state, action, reward, next_state, done)
-
-    # # take n steps
-    # def _take_n_steps(self):
-    #     if (self.max_steps is not None) and (self.n_steps >= self.max_steps):
-    #         self.env_state = self.env.reset()
-    #         self.n_steps = 0
-    #     states = []
-    #     actions = []
-    #     rewards = []
-    #     # take n steps
-    #     for i in range(self.roll_out_n_steps):
-    #         states.append(self.env_state)
-    #         action,_,_,_,_  = self.exploration_action(self.env_state)
-    #         next_state, reward, done, _,_ = self.env.step(action)
-    #         actions.append(action)
-    #         if done and self.done_penalty is not None:
-    #             reward = reward            #Edited 不需要专门的奖励？
-    #         rewards.append(reward)
-    #         final_state = next_state
-    #         self.env_state = next_state
-    #         if done:
-    #             self.env_state = self.env.reset()
-    #             break
-    #     # discount reward
-    #     if done:
-    #         final_value = 0.0
-    #         self.n_episodes += 1
-    #         self.episode_done = True
-    #     else:
-    #         self.episode_done = False
-    #         final_action,_,_,_,_  = self.action(final_state)#这里直接取action
-    #         final_value = self.value(final_state, final_action)
-    #     rewards = self._discount_reward(rewards, final_value)
-    #     self.n_steps += 1
-    #     self.memory.push(states, actions, rewards)
-
     # discount roll out rewards
     def _discount_reward(self, rewards, final_value):
         discounted_r = np.zeros_like(rewards)

@@ -42,7 +42,7 @@ def plot_vectors(tensor1, tensor2, file_path):
         ax.legend()
 
     plt.tight_layout()
-    # 保存图像
+
     plt.savefig(file_path)
     plt.show()
 

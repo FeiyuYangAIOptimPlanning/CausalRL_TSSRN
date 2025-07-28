@@ -70,7 +70,6 @@ class MyEnvironmentRay():
         return (A,B,C,D,self.env.ActionMasks(True))
 
     def step(self, action_dict):
-        """根据智能体的动作字典来更新环境状态，并返回下一步的观察、奖励、完成标志和额外信息。"""
         if isinstance(action_dict,list):
             action_dict={idx:act for idx,act in enumerate(action_dict)}
         preRawObvsList=[np.array(section.NormalizationObvEncodeing(maxVelocity=1500,thTimeValue=20),dtype=np.float32) for section in self.orderedSections]
